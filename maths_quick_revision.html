@@ -9,6 +9,8 @@
   * { box-sizing:border-box; }
   body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
   header { background:linear-gradient(135deg,#172554,#315ee7); color:#fff; padding:28px 18px 24px; }
+  .back-link { color:#fff; text-decoration:none; font-weight:650; font-size:.95rem; display:inline-block; margin-bottom:8px; opacity:.95; }
+  .back-link:hover { text-decoration:underline; opacity:1; }
   .wrap { max-width:1100px; margin:auto; }
   h1 { margin:0 0 8px; font-size:clamp(1.5rem,4vw,2.25rem); }
   header p { margin:0; opacity:.88; }
@@ -49,6 +51,7 @@
 <body>
 <header>
   <div class="wrap">
+    <a href="index.html" class="back-link">← Back to Index</a>
     <h1>Maths Quick Revision</h1>
     <p>Squares 1–55 · Tables 1–30 · Cubes 1–25</p>
   </div>

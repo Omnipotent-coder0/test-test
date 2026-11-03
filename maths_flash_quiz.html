@@ -8,7 +8,9 @@
   :root { color-scheme: light; --bg:#f4f6fb; --card:#fff; --ink:#172033; --muted:#667085; --accent:#315ee7; --line:#e0e5ef; }
   * { box-sizing:border-box; }
   body { margin:0; min-height:100vh; display:flex; flex-direction:column; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); }
-  header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px clamp(14px,4vw,34px); background:#fff; border-bottom:1px solid var(--line); }
+  header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px clamp(14px,4vw,34px); background:#fff; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .back-link { color:var(--accent); text-decoration:none; font-weight:650; font-size:.9rem; }
+  .back-link:hover { text-decoration:underline; }
   .brand { font-weight:750; letter-spacing:-.02em; }
   .sub { color:var(--muted); font-size:.88rem; margin-top:3px; }
   .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
@@ -33,6 +35,7 @@
 </head>
 <body>
 <header>
+  <a href="index.html" class="back-link">← Back to Index</a>
   <div>
     <div class="brand">Maths Flash Quiz</div>
     <div class="sub">Squares 1–55 · Tables 1–30 · Cubes 1–25</div>
