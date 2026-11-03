@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maths Quick Revision — Squares, Tables & Cubes</title>
+<style>
+  :root { color-scheme: light; --bg:#f5f7fb; --card:#fff; --text:#172033; --muted:#657089; --accent:#315ee7; --line:#e4e8f1; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+  header { background:linear-gradient(135deg,#172554,#315ee7); color:#fff; padding:28px 18px 24px; }
+  .wrap { max-width:1100px; margin:auto; }
+  h1 { margin:0 0 8px; font-size:clamp(1.5rem,4vw,2.25rem); }
+  header p { margin:0; opacity:.88; }
+  main { max-width:1100px; margin:20px auto; padding:0 14px 36px; }
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  input, select, button { font:inherit; border-radius:10px; border:1px solid var(--line); padding:10px 12px; }
+  input { flex:1; min-width:190px; background:#fff; }
+  select { background:#fff; }
+  button { cursor:pointer; background:#fff; color:var(--text); }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button:hover { filter:brightness(.97); }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .tabs button.active { background:#172554; color:white; border-color:#172554; }
+  .section-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:8px 0 14px; }
+  .section-head h2 { margin:0; font-size:1.35rem; }
+  .hint { color:var(--muted); font-size:.92rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:13px; padding:13px; box-shadow:0 2px 7px #15234b08; }
+  .card h3 { font-size:1rem; margin:0 0 8px; color:#2448b9; }
+  .equation { display:flex; justify-content:space-between; gap:8px; padding:4px 0; border-bottom:1px dashed #edf0f6; font-variant-numeric:tabular-nums; }
+  .equation:last-child { border-bottom:0; }
+  .answer { font-weight:650; }
+  .hidden-answer .answer { color:transparent; background:#e8ecf5; border-radius:4px; user-select:none; }
+  .hidden-answer .answer::selection { color:transparent; }
+  .empty { background:white; border:1px dashed var(--line); border-radius:12px; padding:24px; color:var(--muted); text-align:center; }
+  .footer { margin-top:18px; color:var(--muted); font-size:.88rem; text-align:center; }
+  @media (max-width:520px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .card { padding:11px; } }
+  @media print {
+    header { background:#fff; color:#000; padding:8px 0; }
+    main { margin:0; padding:0; }
+    .toolbar,.tabs,.footer,.hint { display:none!important; }
+    body { background:#fff; }
+    .grid { grid-template-columns:repeat(4,1fr); gap:6px; }
+    .card { break-inside:avoid; box-shadow:none; padding:8px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Maths Quick Revision</h1>
+    <p>Squares 1–55 · Tables 1–30 · Cubes 1–25</p>
+  </div>
+</header>
+<main>
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="Search a number or result…" aria-label="Search numbers and results">
+    <select id="tableLimit" aria-label="Multiplication table length">
+      <option value="10">Tables ×1 to ×10</option>
+      <option value="12">Tables ×1 to ×12</option>
+      <option value="20">Tables ×1 to ×20</option>
+    </select>
+    <button id="toggleAnswers" class="primary">Hide answers</button>
+    <button id="printBtn">Print</button>
+  </div>
+  <nav class="tabs" aria-label="Choose revision section">
+    <button class="active" data-section="squares">Squares</button>
+    <button data-section="tables">Tables</button>
+    <button data-section="cubes">Cubes</button>
+    <button data-section="all">Show all</button>
+  </nav>
+  <section id="content" aria-live="polite"></section>
+  <p class="footer">Tip: hide answers to quiz yourself. Use your browser’s Print option to save this page as a PDF.</p>
+</main>
+<script>
+(() => {
+  const content = document.getElementById('content');
+  const search = document.getElementById('search');
+  const tableLimit = document.getElementById('tableLimit');
+  const toggleAnswers = document.getElementById('toggleAnswers');
+  let section = 'squares';
+  let answersHidden = false;
+
+  const sections = {
+    squares: { title: 'Squares (1² to 55²)', subtitle: 'Number × itself', max: 55 },
+    tables: { title: 'Multiplication Tables (1 to 30)', subtitle: 'Choose ×1–×10, ×12 or ×20 above', max: 30 },
+    cubes: { title: 'Cubes (1³ to 25³)', subtitle: 'Number × itself × itself', max: 25 }
+  };
+
+  function card(title, lines, searchableText) {
+    const article = document.createElement('article');
+    article.className = 'card' + (answersHidden ? ' hidden-answer' : '');
+    article.dataset.search = searchableText.toLowerCase();
+    const h = document.createElement('h3');
+    h.textContent = title;
+    article.appendChild(h);
+    lines.forEach(([lhs, rhs]) => {
+      const row = document.createElement('div');
+      row.className = 'equation';
+      const left = document.createElement('span');
+      left.textContent = lhs;
+      const right = document.createElement('span');
+      right.className = 'answer';
+      right.textContent = rhs;
+      row.append(left, right);
+      article.appendChild(row);
+    });
+    return article;
+  }
+
+  function buildSection(key) {
+    const cfg = sections[key];
+    const block = document.createElement('section');
+    block.style.marginBottom = '26px';
+    const head = document.createElement('div');
+    head.className = 'section-head';
+    const title = document.createElement('h2');
+    title.textContent = cfg.title;
+    const hint = document.createElement('span');
+    hint.className = 'hint';
+    hint.textContent = cfg.subtitle;
+    head.append(title, hint);
+    block.appendChild(head);
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    if (key === 'squares') {
+      for (let n = 1; n <= 55; n++) {
+        const v = n*n;
+        grid.appendChild(card(`${n} squared`, [[`${n} × ${n}`, `= ${v}`]], `${n} ${v} ${n} squared square ${n}x${n}`));
+      }
+    } else if (key === 'cubes') {
+      for (let n = 1; n <= 25; n++) {
+        const v = n*n*n;
+        grid.appendChild(card(`${n} cubed`, [[`${n} × ${n} × ${n}`, `= ${v}`]], `${n} ${v} ${n} cubed cube`));
+      }
+    } else {
+      const limit = Number(tableLimit.value);
+      for (let n = 1; n <= 30; n++) {
+        const lines = [];
+        let text = `${n} table `;
+        for (let m = 1; m <= limit; m++) {
+          const v = n*m;
+          lines.push([`${n} × ${m}`, `= ${v}`]);
+          text += `${m} ${v} `;
+        }
+        grid.appendChild(card(`Table of ${n}`, lines, `${n} ${text}`));
+      }
+    }
+    block.appendChild(grid);
+    return block;
+  }
+
+  function render() {
+    content.replaceChildren();
+    const keys = section === 'all' ? ['squares','tables','cubes'] : [section];
+    keys.forEach(k => content.appendChild(buildSection(k)));
+    const query = search.value.trim().toLowerCase();
+    let visible = 0;
+    content.querySelectorAll('.card').forEach(el => {
+      const show = !query || el.dataset.search.includes(query) || el.textContent.toLowerCase().includes(query);
+      el.hidden = !show;
+      if (show) visible++;
+    });
+    content.querySelectorAll('section').forEach(block => {
+      const cards = [...block.querySelectorAll('.card')];
+      block.hidden = cards.length > 0 && cards.every(el => el.hidden);
+    });
+    let empty = document.getElementById('emptyMessage');
+    if (query && visible === 0) {
+      if (!empty) {
+        empty = document.createElement('div');
+        empty.id = 'emptyMessage';
+        empty.className = 'empty';
+        empty.textContent = 'No matches found. Try another number.';
+      }
+      content.appendChild(empty);
+    } else if (empty) empty.remove();
+  }
+
+  document.querySelectorAll('[data-section]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      section = btn.dataset.section;
+      document.querySelectorAll('[data-section]').forEach(b => b.classList.toggle('active', b === btn));
+      render();
+    });
+  });
+  search.addEventListener('input', render);
+  tableLimit.addEventListener('change', render);
+  toggleAnswers.addEventListener('click', () => {
+    answersHidden = !answersHidden;
+    toggleAnswers.textContent = answersHidden ? 'Show answers' : 'Hide answers';
+    render();
+  });
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  render();
+})();
+</script>
+</body>
+</html>

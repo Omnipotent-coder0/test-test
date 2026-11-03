@@ -1,0 +1,545 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alphabet Sequence & Coding-Decoding Quiz</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #172033;
+    --muted: #68738a;
+    --accent: #4f46e5;
+    --border: #e0e5ef;
+    --green: #15803d;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px 16px;
+    font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .container { max-width: 900px; margin: auto; }
+
+  h1 { text-align: center; margin-bottom: 6px; }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin: 0 0 24px;
+  }
+
+  .panel, .quiz-card, .coverage-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 18px;
+  }
+
+  .settings {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: end;
+  }
+
+  .field { flex: 1; min-width: 150px; }
+
+  label {
+    display: block;
+    font-weight: 650;
+    font-size: 14px;
+    margin-bottom: 7px;
+  }
+
+  select, button {
+    font: inherit;
+    border-radius: 10px;
+    padding: 11px 14px;
+  }
+
+  select {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--text);
+  }
+
+  button {
+    border: 0;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    font-weight: 650;
+  }
+
+  button.secondary {
+    background: #e9eafc;
+    color: #3730a3;
+  }
+
+  button.neutral {
+    background: #e8edf4;
+    color: #273449;
+  }
+
+  button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .quiz-card { text-align: center; padding: 28px 18px; }
+
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .progress-track {
+    height: 8px;
+    background: #e8ebf3;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 12px 0 24px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width .2s;
+  }
+
+  .letter {
+    font-size: clamp(100px, 24vw, 170px);
+    line-height: 1.1;
+    font-weight: 800;
+    margin: 8px 0 20px;
+  }
+
+  .hint { color: var(--muted); margin-bottom: 18px; }
+
+  .answers {
+    display: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    max-width: 520px;
+    margin: 0 auto 22px;
+  }
+
+  .answer {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 15px 8px;
+  }
+
+  .answer small { display: block; color: #476052; margin-bottom: 4px; }
+  .answer strong { font-size: 28px; color: var(--green); }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .keyboard-hint {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 18px;
+  }
+
+  .coverage-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .coverage-heading h2 { margin: 0; font-size: 19px; }
+
+  .legend { font-size: 12px; color: var(--muted); }
+
+  .alphabet-grid {
+    display: grid;
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  .letter-cell {
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 2px;
+    background: #fafbfe;
+  }
+
+  .letter-cell .char { font-weight: 800; }
+  .letter-cell .count { font-size: 12px; color: var(--muted); }
+
+  .letter-cell.seen {
+    background: #dcfce7;
+    border-color: #86efac;
+  }
+
+  .letter-cell.current {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .status { color: var(--green); font-weight: 650; }
+
+  @media (max-width: 520px) {
+    body { padding: 14px 10px; }
+    .panel, .coverage-card { padding: 14px; }
+    .alphabet-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .answers { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Alphabet Sequence Quiz</h1>
+  <p class="subtitle">Coding-Decoding • Alphabet Positions • Opposite Letters</p>
+
+  <section class="panel">
+    <div class="settings">
+      <div class="field">
+        <label for="questionCount">Questions per session</label>
+        <select id="questionCount">
+          <option value="26">26 questions</option>
+          <option value="52">52 questions</option>
+          <option value="100" selected>100 questions</option>
+          <option value="200">200 questions</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="answerMode">What to practise</label>
+        <select id="answerMode">
+          <option value="both">Position + opposite alphabet</option>
+          <option value="position">Position only</option>
+          <option value="opposite">Opposite alphabet only</option>
+        </select>
+      </div>
+
+      <button id="startBtn">Start / Restart</button>
+    </div>
+  </section>
+
+  <section class="quiz-card">
+    <div class="progress-row">
+      <span id="questionLabel">Question 1 of 100</span>
+      <span id="remainingLabel">100 remaining</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="letter" id="letter">A</div>
+    <div class="hint" id="hint">Think of its position and opposite alphabet.</div>
+
+    <div class="answers" id="answers">
+      <div class="answer" id="positionAnswer">
+        <small>Alphabet position</small>
+        <strong id="positionValue">1</strong>
+      </div>
+      <div class="answer" id="oppositeAnswer">
+        <small>Opposite alphabet</small>
+        <strong id="oppositeValue">Z</strong>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="neutral" id="prevBtn">← Previous</button>
+      <button id="revealBtn">Reveal answer (Space)</button>
+      <button class="secondary" id="nextBtn">Next →</button>
+    </div>
+
+    <div class="keyboard-hint">
+      Keyboard: <b>Space</b> = reveal / next · <b>←</b> = previous · <b>→</b> = next
+    </div>
+    <p id="finishMessage" class="status" hidden></p>
+  </section>
+
+  <section class="coverage-card">
+    <div class="coverage-heading">
+      <h2>Alphabet Coverage</h2>
+      <span class="legend">Green = appeared at least once</span>
+    </div>
+    <div class="stats">
+      <span id="uniqueCount">Unique letters: 0 / 26</span>
+      <span id="frequencyRange">Frequency range: 0–0</span>
+    </div>
+    <div class="alphabet-grid" id="alphabetGrid"></div>
+    <div class="stats">
+      <span id="balanceMessage">Start a session to begin tracking.</span>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  const $ = id => document.getElementById(id);
+
+  let questions = [];
+  let counts = Array(26).fill(0);
+  let currentIndex = 0;
+  let revealed = false;
+  let finished = false;
+
+  // Build a balanced sequence: each letter occurs either floor(N/26)
+  // or ceil(N/26) times, then shuffle it randomly.
+  function makeBalancedQuestions(total) {
+    const pool = [];
+
+    for (let i = 0; i < total; i++) {
+      pool.push(alphabet[i % 26]);
+    }
+
+    // Fisher-Yates shuffle.
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    return pool;
+  }
+
+  function positionOf(letter) {
+    return alphabet.indexOf(letter) + 1;
+  }
+
+  function oppositeOf(letter) {
+    return alphabet[25 - alphabet.indexOf(letter)];
+  }
+
+  function buildCoverage() {
+    const grid = $("alphabetGrid");
+    grid.innerHTML = "";
+
+    alphabet.split("").forEach((letter, index) => {
+      const cell = document.createElement("div");
+      cell.className = "letter-cell";
+      cell.id = "cell-" + letter;
+
+      const char = document.createElement("div");
+      char.className = "char";
+      char.textContent = letter;
+
+      const count = document.createElement("div");
+      count.className = "count";
+      count.id = "count-" + letter;
+      count.textContent = "0";
+
+      cell.append(char, count);
+      grid.appendChild(cell);
+    });
+  }
+
+  function startSession() {
+    const total = Number($("questionCount").value);
+
+    questions = makeBalancedQuestions(total);
+    counts = Array(26).fill(0);
+    currentIndex = 0;
+    revealed = false;
+    finished = false;
+
+    // Count the entire pre-generated session for coverage tracking
+    // only as questions are actually visited, not in advance.
+    render();
+  }
+
+  function recordCurrentLetter() {
+    if (finished || !questions.length) return;
+    const letter = questions[currentIndex];
+    const index = alphabet.indexOf(letter);
+
+    // Count a question only the first time the user visits it.
+    const key = currentIndex;
+    if (!visited.has(key)) {
+      visited.add(key);
+      counts[index]++;
+    }
+  }
+
+  let visited = new Set();
+
+  function startFreshSession() {
+    visited = new Set();
+    startSession();
+  }
+
+  function renderCoverage() {
+    const min = Math.min(...counts);
+    const max = Math.max(...counts);
+    const unique = counts.filter(n => n > 0).length;
+
+    alphabet.split("").forEach((letter, index) => {
+      const cell = $("cell-" + letter);
+      if (!cell) return;
+
+      cell.classList.toggle("seen", counts[index] > 0);
+      cell.classList.toggle(
+        "current",
+        !finished && questions[currentIndex] === letter
+      );
+      $("count-" + letter).textContent = counts[index];
+    });
+
+    $("uniqueCount").textContent = `Unique letters: ${unique} / 26`;
+    $("frequencyRange").textContent = `Frequency range: ${min}–${max}`;
+
+    if (finished) {
+      $("balanceMessage").textContent =
+        `Session complete! You visited ${visited.size} of ${questions.length} questions.`;
+    } else {
+      $("balanceMessage").textContent =
+        `Each letter is scheduled ${Math.floor(questions.length / 26)} or ` +
+        `${Math.ceil(questions.length / 26)} times in this session.`;
+    }
+  }
+
+  function render() {
+    if (!questions.length) return;
+
+    if (currentIndex >= questions.length) {
+      currentIndex = questions.length - 1;
+    }
+
+    const letter = questions[currentIndex];
+    const mode = $("answerMode").value;
+
+    $("letter").textContent = letter;
+    $("questionLabel").textContent =
+      `Question ${currentIndex + 1} of ${questions.length}`;
+    $("remainingLabel").textContent =
+      `${questions.length - currentIndex - 1} remaining`;
+    $("progressBar").style.width =
+      `${((currentIndex + 1) / questions.length) * 100}%`;
+
+    $("positionValue").textContent = positionOf(letter);
+    $("oppositeValue").textContent = oppositeOf(letter);
+
+    $("positionAnswer").style.display =
+      mode === "opposite" ? "none" : "block";
+    $("oppositeAnswer").style.display =
+      mode === "position" ? "none" : "block";
+
+    $("answers").style.display = revealed ? "grid" : "none";
+    $("hint").textContent = revealed
+      ? "Remember the relationship: position + opposite letter."
+      : "Try to recall the answer before revealing it.";
+
+    $("revealBtn").textContent = revealed
+      ? "Next question (Space)"
+      : "Reveal answer (Space)";
+
+    $("prevBtn").disabled = currentIndex === 0;
+    $("nextBtn").disabled = currentIndex === questions.length - 1;
+
+    $("finishMessage").hidden = !finished;
+    $("finishMessage").textContent = finished
+      ? "You've completed the session. Restart to practise again."
+      : "";
+
+    renderCoverage();
+  }
+
+  function revealOrNext() {
+    if (finished) return;
+
+    if (!revealed) {
+      recordCurrentLetter();
+      revealed = true;
+    } else {
+      if (currentIndex === questions.length - 1) {
+        finished = true;
+      } else {
+        currentIndex++;
+        revealed = false;
+      }
+    }
+
+    render();
+  }
+
+  function goNext() {
+    if (currentIndex < questions.length - 1) {
+      currentIndex++;
+      revealed = false;
+      recordCurrentLetter();
+      render();
+    } else if (revealed) {
+      finished = true;
+      render();
+    }
+  }
+
+  function goPrevious() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      revealed = false;
+      recordCurrentLetter();
+      render();
+    }
+  }
+
+  $("startBtn").addEventListener("click", startFreshSession);
+  $("revealBtn").addEventListener("click", revealOrNext);
+  $("nextBtn").addEventListener("click", goNext);
+  $("prevBtn").addEventListener("click", goPrevious);
+
+  $("answerMode").addEventListener("change", render);
+
+  document.addEventListener("keydown", event => {
+    // Don't hijack keyboard input when using a form control.
+    if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+      return;
+    }
+
+    if (event.code === "Space") {
+      event.preventDefault();
+      revealOrNext();
+    } else if (event.code === "ArrowRight") {
+      event.preventDefault();
+      goNext();
+    } else if (event.code === "ArrowLeft") {
+      event.preventDefault();
+      goPrevious();
+    }
+  });
+
+  buildCoverage();
+  startFreshSession();
+})();
+</script>
+</body>
+</html>

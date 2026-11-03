@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maths Flash Quiz</title>
+<style>
+  :root { color-scheme: light; --bg:#f4f6fb; --card:#fff; --ink:#172033; --muted:#667085; --accent:#315ee7; --line:#e0e5ef; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+  header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px clamp(14px,4vw,34px); background:#fff; border-bottom:1px solid var(--line); }
+  .brand { font-weight:750; letter-spacing:-.02em; }
+  .sub { color:var(--muted); font-size:.88rem; margin-top:3px; }
+  .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  button, select { font:inherit; border:1px solid var(--line); border-radius:10px; padding:9px 12px; background:#fff; color:var(--ink); cursor:pointer; }
+  button:focus-visible, select:focus-visible { outline:3px solid #b7c6ff; outline-offset:2px; }
+  main { width:min(900px,100%); margin:auto; padding:28px 16px; flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .progress-row { display:flex; justify-content:space-between; gap:12px; color:var(--muted); font-size:.9rem; margin-bottom:10px; }
+  .track { height:5px; border-radius:99px; background:#e0e5ef; overflow:hidden; margin-bottom:26px; }
+  .bar { height:100%; width:0; background:var(--accent); transition:width .2s ease; }
+  .quiz-card { background:var(--card); border:1px solid var(--line); border-radius:24px; min-height:330px; padding:clamp(24px,6vw,56px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 10px 35px #1d2d5c0a; cursor:pointer; user-select:none; }
+  .tag { color:var(--accent); background:#edf1ff; border-radius:99px; padding:6px 12px; font-weight:700; font-size:.82rem; margin-bottom:24px; }
+  .question { font-size:clamp(2rem,7vw,4.2rem); line-height:1.18; font-weight:750; letter-spacing:-.04em; overflow-wrap:anywhere; }
+  .answer { display:none; margin-top:26px; padding-top:22px; border-top:1px solid var(--line); width:100%; font-size:clamp(1.6rem,5vw,2.8rem); font-weight:750; color:#137547; overflow-wrap:anywhere; }
+  .quiz-card.revealed .answer { display:block; }
+  .instruction { text-align:center; color:var(--muted); margin:18px 0 0; font-size:.95rem; }
+  kbd { display:inline-block; padding:3px 9px; border:1px solid #cbd2df; border-bottom-width:3px; border-radius:6px; background:#fff; color:var(--ink); font-family:inherit; font-size:.88rem; }
+  .bottom { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:20px; }
+  .primary { color:#fff; background:var(--accent); border-color:var(--accent); }
+  .status { color:var(--muted); font-size:.85rem; text-align:center; margin-top:14px; }
+  @media(max-width:520px) { header { align-items:flex-start; flex-direction:column; } .quiz-card { min-height:290px; border-radius:18px; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand">Maths Flash Quiz</div>
+    <div class="sub">Squares 1–55 · Tables 1–30 · Cubes 1–25</div>
+  </div>
+  <div class="controls">
+    <select id="scope" aria-label="Quiz scope">
+      <option value="all">Mixed quiz</option>
+      <option value="squares">Squares only</option>
+      <option value="tables">Tables only</option>
+      <option value="cubes">Cubes only</option>
+    </select>
+    <button id="shuffle" title="Start a new shuffled round">Shuffle round</button>
+  </div>
+</header>
+<main>
+  <div class="progress-row">
+    <span id="counter">Question 1</span>
+    <span id="remaining">Questions left: —</span>
+  </div>
+  <div class="track"><div class="bar" id="bar"></div></div>
+  <div class="quiz-card" id="card" role="button" tabindex="0" aria-label="Press Space to reveal the answer or move to the next question">
+    <div class="tag" id="tag">SQUARE</div>
+    <div class="question" id="question">What is 7²?</div>
+    <div class="answer" id="answer" aria-live="polite">49</div>
+  </div>
+  <p class="instruction" id="instruction">Press <kbd>Space</kbd> to reveal the answer.</p>
+  <div class="bottom">
+    <button id="prev">← Previous</button>
+    <button id="next" class="primary">Reveal answer · Space</button>
+  </div>
+  <div class="status">Space: reveal answer → next question · Use the dropdown to focus on one topic.</div>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const card = $('card'), questionEl = $('question'), answerEl = $('answer');
+  let deck = [], index = 0, revealed = false;
+
+  function makeDeck(scope) {
+    const items = [];
+    if (scope === 'all' || scope === 'squares') {
+      for (let n = 1; n <= 55; n++) items.push({type:'Square', q:`What is ${n}²?`, a:String(n*n), key:`s-${n}`});
+    }
+    if (scope === 'all' || scope === 'tables') {
+      for (let n = 1; n <= 30; n++) {
+        for (let m = 1; m <= 10; m++) items.push({type:'Multiplication table', q:`${n} × ${m} = ?`, a:String(n*m), key:`t-${n}-${m}`});
+      }
+    }
+    if (scope === 'all' || scope === 'cubes') {
+      for (let n = 1; n <= 25; n++) items.push({type:'Cube', q:`What is ${n}³?`, a:String(n*n*n), key:`c-${n}`});
+    }
+    // Shuffle so questions are mixed and less predictable.
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    return items;
+  }
+
+  function render() {
+    if (index >= deck.length) {
+      $('counter').textContent = 'Round complete!';
+      $('remaining').textContent = '0 questions left';
+      $('bar').style.width = '100%';
+      $('tag').textContent = 'WELL DONE';
+      questionEl.textContent = 'You finished this round.';
+      answerEl.textContent = 'Shuffle to practise again';
+      card.classList.add('revealed');
+      revealed = true;
+      $('instruction').innerHTML = 'Press <kbd>Space</kbd> or “Shuffle round” to start again.';
+      $('next').textContent = 'Shuffle round';
+      $('prev').disabled = true;
+      return;
+    }
+    const item = deck[index];
+    $('counter').textContent = `Question ${index + 1} of ${deck.length}`;
+    $('remaining').textContent = `Questions left: ${deck.length - index}`;
+    $('bar').style.width = `${(index / deck.length) * 100}%`;
+    $('tag').textContent = item.type.toUpperCase();
+    questionEl.textContent = item.q;
+    answerEl.textContent = item.a;
+    card.classList.remove('revealed');
+    revealed = false;
+    $('instruction').innerHTML = 'Press <kbd>Space</kbd> to reveal the answer.';
+    $('next').textContent = 'Reveal answer · Space';
+    $('prev').disabled = index === 0;
+  }
+
+  function advance() {
+    if (index >= deck.length) { startRound(); return; }
+    if (!revealed) {
+      revealed = true;
+      card.classList.add('revealed');
+      $('instruction').innerHTML = 'Press <kbd>Space</kbd> again for the next question.';
+      $('next').textContent = 'Next question · Space';
+    } else {
+      index++;
+      render();
+    }
+  }
+
+  function previous() {
+    if (index > 0) { index--; render(); }
+  }
+
+  function startRound() {
+    deck = makeDeck($('scope').value);
+    index = 0;
+    render();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && !e.repeat) {
+      // Prevent page scrolling when Space controls the quiz.
+      e.preventDefault();
+      advance();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      previous();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (revealed) advance();
+      else advance();
+    }
+  });
+  $('next').addEventListener('click', () => {
+    if (index >= deck.length) startRound();
+    else advance();
+  });
+  $('prev').addEventListener('click', previous);
+  $('shuffle').addEventListener('click', startRound);
+  $('scope').addEventListener('change', startRound);
+  card.addEventListener('click', advance);
+  card.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target === card) {
+      e.preventDefault(); advance();
+    }
+  });
+  startRound();
+})();
+</script>
+</body>
+</html>

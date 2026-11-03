@@ -1,0 +1,220 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Alphabet Value Quiz</title>
+
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                margin-top: 60px;
+            }
+
+            h1 {
+                margin-bottom: 10px;
+            }
+
+            #question {
+                font-size: 36px;
+                margin: 30px;
+                font-weight: bold;
+            }
+
+            .option {
+                display: block;
+                width: 200px;
+                margin: 10px auto;
+                padding: 12px;
+                font-size: 20px;
+                cursor: pointer;
+            }
+
+            .correct {
+                background-color: #90ee90;
+            }
+
+            .wrong {
+                background-color: #ff9999;
+            }
+
+            #result {
+                font-size: 24px;
+                margin-top: 20px;
+                min-height: 40px;
+            }
+
+            #timer {
+                font-size: 20px;
+                margin-top: 20px;
+            }
+
+            #score {
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+
+            #nextBtn {
+                margin-top: 20px;
+                padding: 10px 20px;
+                font-size: 18px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Alphabet Number Quiz</h1>
+
+        <div id="score">Correct: 0 | Wrong: 0</div>
+
+        <div id="question"></div>
+
+        <div id="options"></div>
+
+        <div id="result"></div>
+
+        <div id="timer"></div>
+
+        <button id="nextBtn">Next Now</button>
+
+        <script>
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+            let currentLetter;
+            let correctAnswer;
+
+            let correctCount = 0;
+            let wrongCount = 0;
+
+            let countdownInterval;
+            let secondsRemaining = 10;
+            let answered = false;
+
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            function randomLetter() {
+                return letters[Math.floor(Math.random() * letters.length)];
+            }
+
+            function generateOptions(correct) {
+                const options = new Set();
+                options.add(correct);
+
+                while (options.size < 5) {
+                    const candidate = Math.floor(Math.random() * 26) + 1;
+
+                    options.add(candidate);
+                }
+
+                const arr = [...options];
+                shuffle(arr);
+
+                return arr;
+            }
+
+            function updateScore() {
+                document.getElementById("score").textContent =
+                    `Correct: ${correctCount} | Wrong: ${wrongCount}`;
+            }
+
+            function startTimer() {
+                clearInterval(countdownInterval);
+
+                secondsRemaining = 10;
+
+                document.getElementById("timer").textContent =
+                    `Next question in ${secondsRemaining}s`;
+
+                countdownInterval = setInterval(() => {
+                    secondsRemaining--;
+
+                    document.getElementById("timer").textContent =
+                        `Next question in ${secondsRemaining}s`;
+
+                    if (secondsRemaining <= 0) {
+                        clearInterval(countdownInterval);
+                        newQuestion();
+                    }
+                }, 1000);
+            }
+
+            function selectAnswer(choice, button) {
+                if (answered) return;
+
+                answered = true;
+
+                const buttons = document.querySelectorAll(".option");
+
+                buttons.forEach((btn) => (btn.disabled = true));
+
+                if (choice === correctAnswer) {
+                    correctCount++;
+
+                    button.classList.add("correct");
+
+                    document.getElementById("result").textContent =
+                        "✅ Correct!";
+                } else {
+                    wrongCount++;
+
+                    button.classList.add("wrong");
+
+                    buttons.forEach((btn) => {
+                        if (Number(btn.dataset.value) === correctAnswer) {
+                            btn.classList.add("correct");
+                        }
+                    });
+
+                    document.getElementById("result").textContent =
+                        `❌ Wrong! Correct answer: ${correctAnswer}`;
+                }
+
+                updateScore();
+            }
+
+            function newQuestion() {
+                answered = false;
+
+                currentLetter = randomLetter();
+
+                correctAnswer = currentLetter.charCodeAt(0) - 64;
+
+                document.getElementById("question").textContent =
+                    `What is the numeric value of "${currentLetter}" ?`;
+
+                document.getElementById("result").textContent = "";
+
+                const options = generateOptions(correctAnswer);
+
+                const container = document.getElementById("options");
+
+                container.innerHTML = "";
+
+                options.forEach((value) => {
+                    const btn = document.createElement("button");
+
+                    btn.className = "option";
+                    btn.textContent = value;
+                    btn.dataset.value = value;
+
+                    btn.onclick = () => selectAnswer(value, btn);
+
+                    container.appendChild(btn);
+                });
+
+                startTimer();
+            }
+
+            document
+                .getElementById("nextBtn")
+                .addEventListener("click", newQuestion);
+
+            updateScore();
+            newQuestion();
+        </script>
+    </body>
+</html>
